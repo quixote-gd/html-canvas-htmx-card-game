@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "+bQS/Dl/bVn6MXxIoBWusOFjZ38vwcthw8JUZK0Md/a7Q2Kv/dXwRgSPWi/Z86b3GlKffSr0AcJamcADtyu5JQ==",
+  "success": true,
+  "projectFilePath": "/Users/george/Documents/gitrepos/html-canvas-htmx-card-game/CardGameServer/CardGameServer.csproj",
+  "expectedPackageFiles": [
+    "/Users/george/.nuget/packages/microsoft.identitymodel.abstractions/7.0.3/microsoft.identitymodel.abstractions.7.0.3.nupkg.sha512",
+    "/Users/george/.nuget/packages/microsoft.identitymodel.jsonwebtokens/7.0.3/microsoft.identitymodel.jsonwebtokens.7.0.3.nupkg.sha512",
+    "/Users/george/.nuget/packages/microsoft.identitymodel.logging/7.0.3/microsoft.identitymodel.logging.7.0.3.nupkg.sha512",
+    "/Users/george/.nuget/packages/microsoft.identitymodel.tokens/7.0.3/microsoft.identitymodel.tokens.7.0.3.nupkg.sha512",
+    "/Users/george/.nuget/packages/system.identitymodel.tokens.jwt/7.0.3/system.identitymodel.tokens.jwt.7.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
