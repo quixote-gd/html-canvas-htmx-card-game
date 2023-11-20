@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Fish</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1024" height="768"></canvas>
+    <script>
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let animatedCards = [];
+        let animationInProgress = false;
+
+        // Object to store the card images
+        const cardImages = {
+            'Clubs': [],
+            'Diamonds': [],
+            'Spades': [],
+            'Hearts': [],
+            'Jokers': [],
+            'Backs': [],
+            'Blanks': []
+        };
+
+        // Card dimensions
+        const cardWidth = 100;
+        const cardHeight = 144;
+
+        // Load the sprite sheet
+        const spriteSheet = new Image();
+    
+        spriteSheet.onload = function() {
+            // Populate the cardImages object with slices from the sprite sheet
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 15; j++) {
+                    const cardCanvas = document.createElement('canvas');
+                    cardCanvas.width = cardWidth;
+                    cardCanvas.height = cardHeight;
+                    const cardCtx = cardCanvas.getContext('2d');
+
+                    // Draw the card slice on the off-screen canvas
+                    cardCtx.drawImage(
+                        spriteSheet,
+                        j * cardWidth, // source x
+                        i * cardHeight, // source y
+                        cardWidth, // source width
+                        cardHeight, // source height
+                        0, // target x
+                        0, // target y
+                        cardWidth, // target width
+                        cardHeight // target height
+                    );
+
+                    // Get the correct suit array from the cardImages object
+                    const suit = ['Clubs', 'Diamonds', 'Spades', 'Hearts'][i];
+                    cardImages[suit].push(cardCanvas.toDataURL());
+
+                    // Add the Jokers, backs, and blanks to their respective arrays
+                    if (j == 13) {
+                        cardImages['Jokers'].push(cardCanvas.toDataURL());
+                    } else if (j == 14) {
+                        cardImages['Backs'].push(cardCanvas.toDataURL());
+                    }
+                }
+            }
+
+            initGame();
+        };
+        
+        spriteSheet.onerror = function() {
+        // Handle errors if the image fails to load
+            console.error("The image could not be loaded.");
+        };
+
+        spriteSheet.src = 'CuteCards.png';
+
+        function initGame() {
+
+          
+
+            // Assuming each suit has 13 cards and there are 4 suits
+            const totalCards = 13 * 4;
+            const deck = [];
+
+            // Prepare the deck array with card indices
+            for (let i = 0; i < totalCards; i++) {
+                deck.push(i);
+            }
+
+            // Shuffle the deck
+            shuffleDeck(deck);
+
+            // Define player hands and books
+            const playerHand = [];
+            const opponentHand = [];
+            const playerBooks = [];
+            const opponentBooks = [];
+
+            // Number of cards to deal to each player
+            const cardsToDeal = 7;
+
+            // Deal cards to each player
+            for (let i = 0; i < cardsToDeal; i++) {
+                playerHand.push(deck.pop());
+                opponentHand.push(deck.pop());
+            }
+
+            // The remaining deck becomes the draw pile
+            const drawPile = deck;
+
+            // Set the current player - assuming 0 is the human player and 1 is the opponent
+            let currentPlayer = 0;
+
+            // Initial drawing of the game state
+            // Don't draw player hand.
+            drawGameState(playerHand, opponentHand, drawPile);
+
+            // Set up the rest of your game state and logic here
+            startCardDealAnimation(playerHand);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function drawGameState(playerHand, opponentHand, drawPile) {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the opponent's hand face-down
+            for (let i = 0; i < opponentHand.length; i++) {
+                // Draw back of card for opponent's hand
+                drawCardBack(100 + i * (cardWidth + 10), 10);
+            }
+
+            // Draw the draw pile face-down
+            if (drawPile.length > 0) {
+                // Draw back of card for draw pile
+                drawCardBack(canvas.width / 2 - cardWidth / 2, canvas.height / 2 - cardHeight / 2);
+            }
+        } 
+
+        function startCardDealAnimation(hand) {
+            // Prepare animation data
+            animatedCards = hand.map((card, index) => ({
+                index: card,
+                x: -cardWidth, // Start off-screen
+                y: canvas.height - cardHeight - 10,
+                targetX: 100 + index * (cardWidth + 10), // Target position
+                targetY: canvas.height - cardHeight - 10,
+                speed: 5 // Speed of the card movement
+            }));
+
+            animationInProgress = true;
+            animateCards();
+        }
+
+        function animateCards() {
+
+            // Update and draw animated cards
+            animatedCards.forEach(card => {
+                // Move the card closer to its target
+                if (card.x < card.targetX) {
+                    card.x += card.speed;
+                }
+                if (card.y < card.targetY) {
+                    card.y += card.speed;
+                }
+
+                // Draw the card
+                drawCard(card.index, card.x, card.y, true);
+            });
+
+            // Check if any card still needs to move
+            const anyCardMoving = animatedCards.some(card => card.x < card.targetX || card.y < card.targetY);
+
+            if (anyCardMoving) {
+                requestAnimationFrame(animateCards);
+            } else {
+                animationInProgress = false;
+                // Draw the final state if needed or trigger next game state
+            }
+        }
+
+        function drawCard(index, x, y, faceUp) {
+            const suitIndex = Math.floor(index / 13);
+            const suit = ['Clubs', 'Diamonds', 'Spades', 'Hearts'][suitIndex];
+            const cardValue = index % 13;
+            const cardImageSrc = cardImages[suit][cardValue];
+
+            // Create a new Image object for drawing
+            const cardImage = new Image();
+            cardImage.src = cardImageSrc;
+
+            // Draw the image onto the canvas
+            cardImage.onload = function() {
+                ctx.drawImage(cardImage, x, y, cardWidth, cardHeight);
+            };
+        }
+
+        function drawCardBack(x, y) {
+            const backImageSrc = cardImages['Backs'][0]; // Assuming the first back image is what you want to use
+            const backImage = new Image();
+            backImage.src = backImageSrc;
+
+            // Draw the image onto the canvas
+            backImage.onload = function() {
+                ctx.drawImage(backImage, x, y, cardWidth, cardHeight);
+            };
+        }
+    </script>
+</body>
+</html>
