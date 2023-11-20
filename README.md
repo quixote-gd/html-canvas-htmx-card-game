@@ -1,0 +1,1 @@
+Just a fun project to work with the html canvas + htmx to create basic card games.
